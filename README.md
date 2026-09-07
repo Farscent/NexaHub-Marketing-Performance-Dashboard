@@ -26,17 +26,7 @@ channel performance, advertising spend, and CPL.
 
 ## Data Pipeline
 
-Lead Register
-      ↓
-BigQuery
-      ↓
-v_leads_summary
-      ↓
-        + Ad Spend CSV
-      ↓
-Looker Studio Blend
-      ↓
-Marketing Dashboard
+<img width="1448" height="1086" alt="image" src="https://github.com/user-attachments/assets/988e036c-e910-44e3-afaa-37132c50bca7" />
 
 ## Key Metrics
 
