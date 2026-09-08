@@ -1,8 +1,8 @@
 # NexaHub Marketing Performance Dashboard
 
-An interactive marketing analytics dashboard built with
-Google BigQuery and Looker Studio to analyze lead generation,
-acquisition channels, advertising spend, and Cost per Lead (CPL).
+An interactive marketing analytics dashboard built with Google BigQuery
+and Looker Studio to analyze lead generation, acquisition channels,
+advertising spend, and Cost per Lead (CPL).
 
 ## Dashboard Preview
 
@@ -13,8 +13,7 @@ src="https://github.com/user-attachments/assets/a733c83d-3b63-4122-9ecf-4b6c7fb9
 
 🔗 [View the Interactive Looker Studio Dashboard](https://datastudio.google.com/reporting/4562b45e-3b9d-4ad9-9a97-6ba34c1eb14c)
 
-> The dashboard supports dynamic filtering by date range and
-> acquisition channel.
+> The dashboard supports dynamic filtering by date range and acquisition channel.
 
 ## Objectives
 
@@ -28,21 +27,57 @@ src="https://github.com/user-attachments/assets/a733c83d-3b63-4122-9ecf-4b6c7fb9
 
 ## Tech Stack
 
+- Google Sheets
 - Google BigQuery
 - SQL
 - Looker Studio
-- CSV / Google Sheets
+
+## Data Engineering Workflow
+
+This project uses a hybrid ETL/ELT workflow.
+
+### Upstream Data Preparation
+
+Lead data was prepared in Google Sheets before ingestion into BigQuery.
+
+Data-quality and transformation steps included:
+
+- Creating `week_number` from lead dates
+- Creating `month_flag` for monthly grouping
+- Applying dropdown validation to `channel_source`
+- Performing pivot-based validation and sanity checks
+- Enforcing consistent acquisition-channel values
+
+### BigQuery Transformation
+
+The prepared lead data was loaded into Google BigQuery, where additional
+SQL-based transformations and analytical modeling were performed.
+
+These included:
+
+- Monthly lead aggregation
+- Channel-level analysis
+- Service-interest analysis
+- Lead-status classification
+- Conversion labeling
+- Google Ads CPL calculation
+- Creation of the reusable `v_leads_summary` analytical view
 
 ## Data Pipeline
 
 <img width="1448" height="1086" alt="NexaHub Marketing Data Pipeline"
 src="https://github.com/user-attachments/assets/988e036c-e910-44e3-afaa-37132c50bca7" />
 
-The analytical workflow consists of:
+The workflow can be summarized as:
 
-Lead Register → BigQuery → SQL Transformation →
-`v_leads_summary` → Ad Spend Integration →
-Looker Studio → Marketing Dashboard
+Google Sheets Lead Register  
+→ Data Validation & Upstream Transformation  
+→ BigQuery  
+→ SQL Transformation & Analytical Modeling  
+→ `v_leads_summary`  
+→ Ad Spend Integration  
+→ Looker Studio  
+→ Marketing Dashboard
 
 ## SQL Analysis
 
@@ -70,9 +105,9 @@ See the [`sql/`](./sql) directory for the complete queries.
 
 Cost per Lead is calculated as:
 
-CPL = Advertising Spend / Number of Leads
+CPL = Advertising Spend / Number of Paid Leads
 
-Monthly CPL is also analyzed by paid acquisition channel.
+Monthly CPL is analyzed by paid acquisition channel.
 
 ## Dashboard Features
 
@@ -93,10 +128,11 @@ The datasets are blended using:
 - Month
 - Acquisition channel
 
-During development, the lead dataset represented month as a
-`YYYY-MM` string while the advertising dataset was interpreted as
-a date. A standardized month-date field was created to ensure
-consistent joins and date filtering in Looker Studio.
+During development, the lead dataset represented month as a `YYYY-MM`
+string while the advertising dataset was interpreted as a date.
+
+A standardized month-date field was created to ensure consistent joins
+and date filtering in Looker Studio.
 
 ## Repository Structure
 
@@ -105,14 +141,11 @@ nexahub-marketing-performance/
 │
 ├── README.md
 │
-├── sql/
-│   ├── README.md
-│   ├── 01_monthly_leads.sql
-│   ├── 02_leads_by_channel.sql
-│   ├── 03_leads_by_service_interest.sql
-│   ├── 04_lead_status_breakdown.sql
-│   ├── 05_google_ads_cpl.sql
-│   └── 06_create_leads_summary_view.sql
-│
-└── data/
-    └── leads_sample.csv
+└── sql/
+    ├── README.md
+    ├── 01_monthly_leads.sql
+    ├── 02_leads_by_channel.sql
+    ├── 03_leads_by_service_interest.sql
+    ├── 04_lead_status_breakdown.sql
+    ├── 05_google_ads_cpl.sql
+    └── 06_create_leads_summary_view.sql
