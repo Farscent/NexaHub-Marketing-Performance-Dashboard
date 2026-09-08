@@ -115,4 +115,4 @@ nexahub-marketing-performance/
 │   └── 06_create_leads_summary_view.sql
 │
 └── data/
-    └── ad_spend_sample.csv
+    └── leads_sample.csv
