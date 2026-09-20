@@ -149,3 +149,6 @@ nexahub-marketing-performance/
     ├── 04_lead_status_breakdown.sql
     ├── 05_google_ads_cpl.sql
     └── 06_create_leads_summary_view.sql
+|
+├── data/
+    ├── leads_sample.csv
