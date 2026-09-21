@@ -1,6 +1,6 @@
 # NexaHub Marketing Performance Dashboard
 
-A marketing BI project built with Google Sheets, Google BigQuery, SQL, and Looker Studio. It connects lead acquisition data with monthly advertising spend to compare channel efficiency and explore lead volume, service demand, and current pipeline status.
+A marketing Business Intelligence project built with Google Sheets, Google BigQuery, SQL, and Looker Studio. It connects lead acquisition data with monthly advertising spend to compare channel efficiency and explore lead volume, service demand, and current pipeline status.
 
 ## Live Dashboard
 
