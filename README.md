@@ -1,154 +1,161 @@
 # NexaHub Marketing Performance Dashboard
 
-An interactive marketing analytics dashboard built with Google BigQuery
-and Looker Studio to analyze lead generation, acquisition channels,
-advertising spend, and Cost per Lead (CPL).
-
-## Dashboard Preview
-
-<img width="963" height="720" alt="NexaHub Marketing Dashboard"
-src="https://github.com/user-attachments/assets/a733c83d-3b63-4122-9ecf-4b6c7fb9a157" />
+A marketing BI project built with Google Sheets, Google BigQuery, SQL, and Looker Studio. It connects lead acquisition data with monthly advertising spend to compare channel efficiency and explore lead volume, service demand, and current pipeline status.
 
 ## Live Dashboard
 
-🔗 [View the Interactive Looker Studio Dashboard](https://datastudio.google.com/reporting/4562b45e-3b9d-4ad9-9a97-6ba34c1eb14c)
+<img width="897" height="675" alt="image" src="https://github.com/user-attachments/assets/fd413b00-d62c-4e83-97f7-8d67a624407f" />
 
-> The dashboard supports dynamic filtering by date range and acquisition channel.
+[View the interactive NexaHub V2 dashboard](https://datastudio.google.com/reporting/75eefa77-a75c-403f-9579-2e3bc702f48b)
 
-## Objectives
+The report supports acquisition-channel filtering and complete-month date selections. The reviewed dataset covers **March–May 2026**, with **30 leads**, **14 paid-channel leads**, and **6 monthly advertising-spend records**.
 
-- Monitor total lead generation
-- Analyze leads by acquisition channel
-- Track leads by service interest
-- Analyze lead pipeline status
-- Monitor advertising expenditure
-- Calculate Cost per Lead (CPL)
-- Enable dynamic date and channel filtering
+## Business Questions
+
+- How does lead volume change each month?
+- Which acquisition channels generate the most leads?
+- What does each paid channel spend per lead?
+- Which services attract the most interest?
+- How are leads distributed across their current pipeline statuses?
 
 ## Tech Stack
 
-- Google Sheets
-- Google BigQuery
-- SQL
-- Looker Studio
+| Tool | Role |
+|---|---|
+| Google Sheets | Source register, upstream preparation, dropdown validation, and sanity checks |
+| Google BigQuery | Storage, SQL transformations, and reusable analytical views |
+| GoogleSQL | Aggregation, window calculations, date normalization, joins, and metric definitions |
+| Looker Studio | Interactive scorecards, charts, filters, and monthly CPL reporting |
 
 ## Data Engineering Workflow
 
-This project uses a hybrid ETL/ELT workflow.
+The project combines preparation before loading with SQL transformations after loading. The current workflow uses manual imports into BigQuery.
 
-### Upstream Data Preparation
+Upstream preparation in Google Sheets included derived week and month fields, acquisition-channel dropdown validation, and pivot-based sanity checks. BigQuery then provides the analytical layer.
 
-Lead data was prepared in Google Sheets before ingestion into BigQuery.
+### Data Sources
 
-Data-quality and transformation steps included:
+| BigQuery table | Grain | Main fields |
+|---|---|---|
+| `marketing.leads` | One row per recorded lead | `date`, `channel_source`, `service_interest`, `lead_status`, `country` |
+| `marketing.ad_spend` | One row per month and paid channel in the source dataset | `month`, `channel`, `spend_usd` |
 
-- Creating `week_number` from lead dates
-- Creating `month_flag` for monthly grouping
-- Applying dropdown validation to `channel_source`
-- Performing pivot-based validation and sanity checks
-- Enforcing consistent acquisition-channel values
+Paid-channel scope is explicitly defined as **Google Ads and LinkedIn**.
 
-### BigQuery Transformation
+### Analytical Views
 
-The prepared lead data was loaded into Google BigQuery, where additional
-SQL-based transformations and analytical modeling were performed.
+| View | Grain | Dashboard use |
+|---|---|---|
+| `marketing.v_leads_summary` | One row per source lead | Total Leads, Leads per Month, Service Interest, Lead Status, and Channel breakdowns |
+| `marketing.v_channel_month` | One row per month and channel | Ad Spend, Paid CPL, and Monthly CPL table |
 
-These included:
-
-- Monthly lead aggregation
-- Channel-level analysis
-- Service-interest analysis
-- Lead-status classification
-- Conversion labeling
-- Google Ads CPL calculation
-- Creation of the reusable `v_leads_summary` analytical view
+The monthly view aggregates each input before joining on `month_date` and `channel_source`. A `FULL OUTER JOIN` preserves unmatched lead and spend records, while missing spend remains `NULL`. The paid-spend integration happens in BigQuery; the V2 CPL charts consume the joined view directly.
 
 ## Data Pipeline
 
-<img width="1448" height="1086" alt="NexaHub Marketing Data Pipeline"
-src="https://github.com/user-attachments/assets/988e036c-e910-44e3-afaa-37132c50bca7" />
-
-The workflow can be summarized as:
-
-Google Sheets Lead Register  
-→ Data Validation & Upstream Transformation  
-→ BigQuery  
-→ SQL Transformation & Analytical Modeling  
-→ `v_leads_summary`  
-→ Ad Spend Integration  
-→ Looker Studio  
-→ Marketing Dashboard
-
-## SQL Analysis
-
-The repository contains SQL queries for:
-
-- Monthly lead volume
-- Lead acquisition by channel
-- Service-interest analysis
-- Lead-status breakdown
-- Google Ads CPL analysis
-- Creation of the `v_leads_summary` analytical view
-
-See the [`sql/`](./sql) directory for the complete queries.
+```mermaid
+flowchart TD
+    A["Google Sheets: lead register and ad spend"] --> B["Preparation and manual BigQuery imports"]
+    B --> C["marketing.leads"]
+    B --> D["marketing.ad_spend"]
+    C --> E["v_leads_summary"]
+    C --> F["v_channel_month"]
+    D --> F
+    E --> G["Looker Studio: lead charts"]
+    F --> H["Looker Studio: spend and CPL"]
+```
 
 ## Key Metrics
 
-- Total Leads
-- Advertising Spend
-- Cost per Lead
-- Leads by Channel
-- Leads by Service Interest
-- Lead Status Distribution
+| Metric | Definition |
+|---|---|
+| Total Leads | Count of source lead records in the selected channels and months |
+| Paid Leads | Leads attributed to Google Ads or LinkedIn in the selected months |
+| Ad Spend | Sum of recorded advertising spend in USD for the selected channels and months |
+| Paid CPL | Total paid-channel spend divided by total paid-channel leads for the same selection |
+| Current Closed-Won Share | Leads currently marked `Closed Won` divided by all leads in the selected population |
 
-## CPL Calculation
+### Paid CPL and Blended CPL
 
-Cost per Lead is calculated as:
+For the full dataset:
 
-CPL = Advertising Spend / Number of Paid Leads
+| Metric | Calculation | Result |
+|---|---|---:|
+| Paid CPL, used in V2 | $7,900 / 14 paid-channel leads | **$564.29** |
+| Blended ad spend per all leads | $7,900 / 30 leads across all channels | **$263.33** |
 
-Monthly CPL is analyzed by paid acquisition channel.
+These measures use different denominators. The earlier $263.33 figure distributes ad spend across all leads, including channels without recorded ad spend. It is not the paid-channel CPL shown in V2.
 
-## Dashboard Features
-
-- Interactive date range filtering
-- Multi-select acquisition channel filtering
-- Monthly lead trend analysis
-- Service-interest analysis
-- Channel distribution
-- Lead-status breakdown
-- Monthly CPL analysis
-
-## Data Integration
-
-Lead data and advertising spend originate from separate sources.
-
-The datasets are blended using:
-
-- Month
-- Acquisition channel
-
-During development, the lead dataset represented month as a `YYYY-MM`
-string while the advertising dataset was interpreted as a date.
-
-A standardized month-date field was created to ensure consistent joins
-and date filtering in Looker Studio.
-
-## Repository Structure
+For paid-channel charts, filter `is_paid_channel = TRUE` and calculate:
 
 ```text
-nexahub-marketing-performance/
-│
-├── README.md
-│
-└── sql/
-    ├── README.md
-    ├── 01_monthly_leads.sql
-    ├── 02_leads_by_channel.sql
-    ├── 03_leads_by_service_interest.sql
-    ├── 04_lead_status_breakdown.sql
-    ├── 05_google_ads_cpl.sql
-    └── 06_create_leads_summary_view.sql
-|
-├── data/
-    ├── leads_sample.csv
+SUM(spend_usd) / SUM(total_leads)
+```
+
+Calculate CPL from summed components rather than averaging monthly CPL values. This dashboard formula assumes complete spend coverage for the selected paid channels and months; review `cpl_status` before reporting newly imported data.
+
+## Dashboard Configuration
+
+| Component | Data source | Metric |
+|---|---|---|
+| Total Leads and four lead charts | `v_leads_summary` | Record Count |
+| Ad Spend | `v_channel_month` | `SUM(spend_usd)` |
+| Paid CPL | `v_channel_month` | `SUM(spend_usd) / SUM(total_leads)`, filtered to paid channels |
+| Monthly CPL table | `v_channel_month` | Leads, spend, and Paid CPL by month and channel |
+
+For these components, use a complete Date field, `month_date`, as the date-range dimension and set the default date range to **Auto**. Sort monthly reporting chronologically.
+
+Because the reporting date is the first day of each month and spend is monthly, select **whole calendar months**. Arbitrary partial-month selections are not supported accurately by this model.
+
+## Validation Results
+
+The following source reconciliation targets and dashboard checks were recorded during development. They are manual checks, not an automated test suite.
+
+| Selection | Total Leads | Paid Leads | Ad Spend | Paid CPL |
+|---|---:|---:|---:|---:|
+| March–May, all channels | 30 | 14 | $7,900 | $564.29 |
+| March–May, Google Ads | 11 | 11 | $5,500 | $500.00 |
+| March–May, LinkedIn | 3 | 3 | $2,400 | $800.00 |
+| March, all channels | 10 | 5 | $2,300 | $460.00 |
+| March, Google Ads | 4 | 4 | $1,500 | $375.00 |
+
+The March date-filter recheck also confirmed a single monthly bar of 10 and service, status, and channel breakdowns representing the same 10 leads.
+
+## Findings and Business Implications
+
+| Finding from March–May | Implication | Suggested follow-up |
+|---|---|---|
+| Google Ads generated 11 leads at $500 CPL; LinkedIn generated 3 at $800 CPL | Google Ads had 37.5% lower CPL in this sample | Compare lead quality and subsequent outcomes before changing budgets |
+| Google Ads monthly CPL rose from $375 in March to $550 in April and $600 in May | Acquisition cost per lead increased over the observed period | Review campaign targeting, traffic, and landing-page performance; the available data does not establish the cause |
+| EOR accounted for 15 of 30 leads (50%) | EOR was the most frequently requested service | Investigate EOR messaging and service capacity using a larger sample |
+
+These are descriptive findings from a small dataset, not evidence of measured business impact or causal effects.
+
+## Running the SQL
+
+1. Create a BigQuery dataset and load the lead and ad-spend inputs into `leads` and `ad_spend`.
+2. Replace `nexahub-analytics.marketing` in the scripts if using another project or dataset.
+3. Run [06_create_leads_summary_view.sql](sql/06_create_leads_summary_view.sql) and [07_create_channel_month_view.sql](sql/07_create_channel_month_view.sql).
+4. Connect each view to the appropriate Looker Studio components and configure the filters above.
+5. Reconcile lead counts, spend, and CPL against the source data before sharing the report.
+
+See [SQL Analysis](sql/README.md) for query descriptions, input types, edge cases, and validation SQL. Queries 01–04 are standalone exploratory analyses. Query 05 is retained as an earlier Google Ads example; query 07 supplies the current monthly CPL layer.
+
+## Repository Contents
+
+| Path | Contents |
+|---|---|
+| [sql/](sql/) | Seven SQL scripts and the SQL analysis guide |
+| [data/leads_sample.csv](data/leads_sample.csv) | Two illustrative lead records showing the input structure |
+| [LICENSE](LICENSE) | MIT license |
+
+The committed CSV is not the complete dataset behind the dashboard. The full 30-lead register and ad-spend input are not included in the repository, so the sample alone cannot reproduce the reported totals.
+
+## Scope and Limitations
+
+- Lead counts assume one valid record per lead. The source has no persistent lead ID, and the current views do not deduplicate records.
+- Status is a current snapshot. A lead marked `Closed Won` is not evidence that it closed during its acquisition month, and stage-to-stage conversion cannot be reconstructed.
+- Monthly spend does not support reliable daily CPL or allocation by country, service, or campaign.
+- Missing spend and zero leads produce unavailable CPL. Missing spend must not be interpreted as zero cost.
+- The project does not currently implement scheduled ingestion, incremental loading, or automated quality tests.
+
