@@ -55,15 +55,16 @@ The monthly view aggregates each input before joining on `month_date` and `chann
 
 ```mermaid
 flowchart TD
-    A["Google Sheets: lead register and ad spend"] --> B["Preparation and manual BigQuery imports"]
-    B --> C["marketing.leads"]
-    B --> D["marketing.ad_spend"]
+    A["Google Sheets"] --> B["Prepare and import"]
+    B --> C["leads"]
+    B --> D["ad_spend"]
     C --> E["v_leads_summary"]
     C --> F["v_channel_month"]
     D --> F
-    E --> G["Looker Studio: lead charts"]
-    F --> H["Looker Studio: spend and CPL"]
+    E --> G["Lead charts"]
+    F --> H["Spend and CPL"]
 ```
+Google Sheets contains the lead register and ad-spend inputs. After preparation, both are manually imported into BigQuery's `marketing` dataset. SQL views supply the lead charts and paid-acquisition metrics in Looker Studio.
 
 ## Key Metrics
 
